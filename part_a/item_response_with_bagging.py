@@ -98,6 +98,21 @@ def update_theta_beta(data, lr, theta, beta):
         #     # print("-------------")
     return new_theta, new_beta
 
+   
+def bootstrap_sample(data, n_samples):
+    """ Generate a bootstrapped sample from the dataset.
+    
+    :param data: Original dataset
+    :param n_samples: Number of samples to draw
+    :return: Bootstrapped dataset
+    """
+    indices = np.random.choice(len(data["is_correct"]), size=n_samples, replace=True)
+    bootstrapped_data = {
+        "user_id": [data["user_id"][i] for i in indices],
+        "question_id": [data["question_id"][i] for i in indices],
+        "is_correct": [data["is_correct"][i] for i in indices]
+    }
+    return bootstrapped_data
 
 def irt(data, val_data, lr, iterations):
     """ Train IRT model.
@@ -201,9 +216,26 @@ def main():
     #####################################################################
     lr = 0.005
     iterations = 10
-    theta, beta, val_acc_lst = irt(train_data, val_data, lr, iterations)
-    print("Validation Accuracy:", val_acc_lst[-1])
-    test_accuracy = evaluate(test_data, theta, beta)
+    n_bootstraps = 3
+    all_theta = []
+    all_beta = []
+    all_val_acc_lst =[]
+    val_acc_lst = 0
+    all_test_accuracy = []
+    test_accuracy = 0
+    for i in range(n_bootstraps):
+        bootstrapped_data = bootstrap_sample(train_data, len(train_data["is_correct"]))
+        theta, beta, bs_val_acc_lst = irt(bootstrapped_data, val_data, lr, iterations)
+        all_theta.append(theta)
+        all_beta.append(beta)
+        all_val_acc_lst.append(bs_val_acc_lst[-1])
+        bs_test_accuracy = evaluate(test_data, theta, beta)
+        all_test_accuracy.append(bs_test_accuracy)
+        print(bs_val_acc_lst[-1])
+        print(bs_test_accuracy)
+    val_acc_lst = np.mean(all_val_acc_lst)
+    print("Validation Accuracy:", val_acc_lst)
+    test_accuracy=np.mean(all_test_accuracy)
     print("Test Accuracy:", test_accuracy)
     predict(1,1,theta,beta)
     predict(1,1046,theta,beta)
