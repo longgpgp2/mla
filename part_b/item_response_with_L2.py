@@ -47,7 +47,7 @@ def neg_log_likelihood(data, theta, beta):
     return -log_lklihood
 
 
-def update_theta_beta(data, lr, theta, beta):
+def update_theta_beta(data, lr, theta, beta, lambda_):
     """ Update theta and beta using gradient descent.
 
     You are using alternating gradient descent. Your update should look:
@@ -77,8 +77,12 @@ def update_theta_beta(data, lr, theta, beta):
         x = (theta[u] - beta[q]).sum()
         p_a = sigmoid(x)
         is_correct = data["is_correct"][i]
-        new_theta[u]+=lr*(is_correct*(1-p_a)-(1-is_correct)*p_a)
-        new_beta[q]-=lr*(is_correct*(1-p_a)-(1-is_correct)*p_a)
+        # new_theta[u]+=lr*(is_correct*(1-p_a)-(1-is_correct)*p_a)
+        # new_beta[q]-=lr*(is_correct*(1-p_a)-(1-is_correct)*p_a)
+        
+        # Add L2 regularization
+        new_theta[u]+=lr*(is_correct*(1-p_a)-(1-is_correct)*p_a - lambda_*theta[u])
+        new_beta[q]-=lr*(is_correct*(1-p_a)-(1-is_correct)*p_a - lambda_*beta[q])
         # if data["is_correct"][i] == 1:
         #     # ability++, difficulty--
         #     # print(new_theta[u], " and ", new_beta[q])
@@ -98,23 +102,8 @@ def update_theta_beta(data, lr, theta, beta):
         #     # print("-------------")
     return new_theta, new_beta
 
-   
-def bootstrap_sample(data, n_samples):
-    """ Generate a bootstrapped sample from the dataset.
-    
-    :param data: Original dataset
-    :param n_samples: Number of samples to draw
-    :return: Bootstrapped dataset
-    """
-    indices = np.random.choice(len(data["is_correct"]), size=n_samples, replace=True)
-    bootstrapped_data = {
-        "user_id": [data["user_id"][i] for i in indices],
-        "question_id": [data["question_id"][i] for i in indices],
-        "is_correct": [data["is_correct"][i] for i in indices]
-    }
-    return bootstrapped_data
 
-def irt(data, val_data, lr, iterations):
+def irt(data, val_data, lr, iterations, lambda_):
     """ Train IRT model.
 
     You may optionally replace the function arguments to receive a matrix.
@@ -139,7 +128,7 @@ def irt(data, val_data, lr, iterations):
     val_acc_lst = []
     iter=0
     for i in range(iterations):
-        new_theta, new_beta = update_theta_beta(data, lr, theta, beta)
+        new_theta, new_beta = update_theta_beta(data, lr, theta, beta, lambda_)
         # This checks if the current beta/theta values are close to the updated new_beta/new_theta values
         if np.allclose(theta, new_theta) and np.allclose(beta, new_beta):
             print("Converged at iteration", i)
@@ -197,7 +186,7 @@ def plot_probability(theta, beta, question_ids):
         plt.plot(sorted_theta, probability, label=f"Question {question_ids[i]}")
     plt.xlabel("Student Ability (θ)")
     plt.ylabel("Probability of Correct Response")
-    plt.title("Probability of Correct Response vs. Student Ability")
+    plt.title("Probability of Correct Response vs. Student Ability with L2 Regularization")
     plt.legend()
     plt.show()
     
@@ -215,36 +204,15 @@ def main():
     # code, report the validation and test accuracy.                    #
     #####################################################################
     lr = 0.005
-    iterations = 10
-    n_bootstraps = 3
-    all_theta = []
-    all_beta = []
-    all_val_acc_lst =[]
-    val_acc_lst = 0
-    all_test_accuracy = []
-    test_accuracy = 0
-    new_theta = []
-    new_beta = []
-    for i in range(n_bootstraps):
-        bootstrapped_data = bootstrap_sample(train_data, len(train_data["is_correct"]))
-        theta, beta, bs_val_acc_lst = irt(bootstrapped_data, val_data, lr, iterations)
-        all_theta.append(theta)
-        all_beta.append(beta)
-        all_val_acc_lst.append(bs_val_acc_lst[-1])
-        bs_test_accuracy = evaluate(test_data, theta, beta)
-        all_test_accuracy.append(bs_test_accuracy)
-        print(bs_val_acc_lst[-1])
-        print(bs_test_accuracy)
-        new_theta=np.mean(all_theta, axis=0)
-        new_beta=np.mean(all_beta, axis=0)
-
-    val_acc_lst = np.mean(all_val_acc_lst)
-    print("Validation Accuracy:", val_acc_lst)
-    test_accuracy=np.mean(all_test_accuracy)
+    iterations = 100
+    lambda_ = 0.05
+    theta, beta, val_acc_lst = irt(train_data, val_data, lr, iterations, lambda_)
+    print("Validation Accuracy:", val_acc_lst[-1])
+    test_accuracy = evaluate(test_data, theta, beta)
     print("Test Accuracy:", test_accuracy)
-    predict(1,1,new_theta,new_beta)
-    predict(1,1046,new_theta,new_beta)
-    predict(1,1444,new_theta,new_beta)
+    predict(1,1,theta,beta)
+    predict(1,1046,theta,beta)
+    predict(1,1444,theta,beta)
     # the first, the hardest, and the easiest questions
     question_ids = [1, 1046, 1444]
     print("Total questions:",len(beta),"Total students:",len(theta), "Number of iterations:", iterations)

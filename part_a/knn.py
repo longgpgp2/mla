@@ -1,3 +1,7 @@
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from sklearn.impute import KNNImputer
 from utils import *
 
@@ -42,6 +46,25 @@ def knn_impute_by_item(matrix, valid_data, k):
     acc = sparse_matrix_evaluate(valid_data, mat)
     print("Validation Accuracy: {}".format(acc))
     return acc
+
+def predict(matrix, k, user_based=True):
+    """ Predict the probability of correct answers in the matrix using k-Nearest Neighbors.
+
+    :param matrix: 2D sparse matrix
+    :param k: int
+    :param user_based: bool, if True use user-based KNN, else use item-based KNN
+    :return: 2D numpy array with predicted probabilities
+    """
+    nbrs = KNNImputer(n_neighbors=k)
+    
+    if user_based:
+        imputed_matrix = nbrs.fit_transform(matrix)
+    else:
+        imputed_matrix = nbrs.fit_transform(matrix.T).T
+
+    return imputed_matrix
+
+
 
 
 def main():
