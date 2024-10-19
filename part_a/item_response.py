@@ -165,7 +165,7 @@ def predict(user_id, question_id, theta, beta):
     user_ability = theta[user_id]
     question_difficulty = beta[question_id]
     probability_correct = 1 / (1 + np.exp(-(user_ability - question_difficulty)))
-    print("Student",user_id,"ability:",user_ability," Question",question_id,"difficulty:", question_difficulty,"Propability:" ,probability_correct)
+    # print("Student",user_id,"ability:",user_ability," Question",question_id,"difficulty:", question_difficulty,"Propability:" ,probability_correct)
     return probability_correct
 
 def plot_probability(theta, beta, question_ids):

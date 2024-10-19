@@ -56,8 +56,8 @@ def train_irt(train_data, val_data, test_data, lr, iterations, ):
         irt_accuracies.append(bs_val_acc_lst[-1])
         bs_test_accuracy = evaluate(test_data, theta, beta)
         irt_test_accuracies.append(bs_test_accuracy)
-        print(bs_val_acc_lst[-1])
-        print(bs_test_accuracy)
+        print("Validation Accuracy of BS",i+1 ,bs_val_acc_lst[-1])
+        print("Test Accuracy of BS",i+1 ,bs_test_accuracy)
     irt_theta=np.mean(all_theta, axis=0)
     irt_beta=np.mean(all_beta, axis=0)
     print("Finished training the IRT model.")
@@ -65,7 +65,7 @@ def train_irt(train_data, val_data, test_data, lr, iterations, ):
     print("IRT Validation Accuracy:", irt_valid_acc)
     irt_test_acc=np.mean(irt_test_accuracies)
     print("IRT Test Accuracy:", irt_test_acc)
-    
+    print()
     return irt_theta, irt_beta, irt_valid_acc, irt_test_acc
 
 def train_knn(sparse_matrix, val_data, test_data):
@@ -85,13 +85,16 @@ def train_knn(sparse_matrix, val_data, test_data):
     print("Finished training KNN model.")
     print("KNN Validation Accuracy:", knn_valid_acc, "KNN Test Accuracy:", knn_test_acc)
     knn_predicted_probabilities = knn.predict(sparse_matrix, k, user_based=True)
+    print()
     return knn_predicted_probabilities, knn_valid_acc, knn_test_acc
 
 def predict_ensemble(u, q, knn_predicted_probabilities, theta, beta):
     knn_prediction = knn_predicted_probabilities[u,q]
     irt_prediction = predict(u, q, theta, beta)
     ensemble_prediction = (knn_prediction+irt_prediction)/2
-    print(ensemble_prediction)
+    print("IRT prediction:", irt_prediction)
+    print("KNN prediction:", knn_prediction)
+    print("Ensemble prediction:", ensemble_prediction)
     return ensemble_prediction
 
 def main():
@@ -106,10 +109,12 @@ def main():
 
     irt_theta, irt_beta, irt_valid_acc, irt_test_acc = train_irt(train_data, val_data, test_data, lr, iterations)
     knn_predicted_probabilities, knn_valid_acc, knn_test_acc = train_knn(sparse_matrix, val_data, test_data)
-    print(irt_test_acc, irt_valid_acc, knn_valid_acc, knn_test_acc)
+    # print(irt_test_acc, irt_valid_acc, knn_valid_acc, knn_test_acc)
     es_valid_acc = (knn_valid_acc+irt_valid_acc)/2
     es_test_acc = (knn_test_acc+irt_test_acc)/2
     print("Ensemble Validation Accuracy:", es_valid_acc, "Ensemble Test Accuracy:", es_test_acc)
+    print()
+    print("Predict probability")
     predict_ensemble(1, 1046, knn_predicted_probabilities, irt_theta, irt_beta)
     
 
