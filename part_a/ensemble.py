@@ -98,13 +98,13 @@ def train_irt(train_data, val_data, test_data, lr, iterations, ):
     print("IRT Validation Accuracy:", irt_valid_acc)
     irt_test_acc=np.mean(irt_test_accuracies)
     print("IRT Test Accuracy:", irt_test_acc)
-    
+    print()
     return irt_theta, irt_beta, irt_valid_acc, irt_test_acc
 
 def train_knn(sparse_matrix, val_data, test_data):
     print("Training the KNN model:")
     n_bootstraps = 3
-    k = 21
+    k = 11
     user_based_valid_accuracies = []
     user_based_test_accuracies = []
     for i in range(n_bootstraps):
@@ -118,6 +118,7 @@ def train_knn(sparse_matrix, val_data, test_data):
     print("Finished training KNN model.")
     print("KNN Validation Accuracy:", knn_valid_acc, "KNN Test Accuracy:", knn_test_acc)
     knn_predicted_probabilities = knn.predict(sparse_matrix, k, user_based=True)
+    print()
     return knn_predicted_probabilities, knn_valid_acc, knn_test_acc
 
 def train_neural_network():
@@ -146,7 +147,7 @@ def train_neural_network():
         # Train the model on the bootstrapped data
         final_valid_acc = neural_network.train(model, lr, lamb=0.01, train_data=train_matrix, 
                                 zero_train_data=zero_train_matrix, valid_data=valid_data, 
-                                num_epoch=num_epoch)
+                                num_epoch=num_epoch, plot=False)
 
         # Evaluate the model on the test data
         test_acc = neural_network.evaluate(model, zero_train_matrix, test_data)
@@ -157,6 +158,7 @@ def train_neural_network():
         neural_test_acc = np.mean(all_test_accuracy)
         print(f"Bootstrap {i + 1}: Validation Accuracy: {final_valid_acc}, Test Accuracy: {test_acc}")
     print("Finished training Neural Network model.")
+    print()
     return models, zero_train_matrix, neural_valid_acc, neural_test_acc
     # print("Average Validation Accuracy:", avg_val_acc, "Average Test Accuracy:", avg_test_acc)
 
@@ -167,7 +169,7 @@ def predict_ensemble(u, q, knn_predicted_probabilities, theta, beta, models, zer
     irt_prediction = predict(u, q, theta, beta)
     neural_prediction = predict_neural(models, zero_train_matrix, 1, 1046)
     ensemble_prediction = (knn_prediction+irt_prediction+ neural_prediction)/3
-    print(ensemble_prediction)
+    print("Ensemble prediction:",ensemble_prediction)
     return ensemble_prediction
 
 def predict_neural(models, zero_train_matrix, u, q):
@@ -191,11 +193,12 @@ def main():
     irt_theta, irt_beta, irt_valid_acc, irt_test_acc = train_irt(train_data, val_data, test_data, lr, iterations)
     
     knn_predicted_probabilities, knn_valid_acc, knn_test_acc = train_knn(sparse_matrix, val_data, test_data)
-    print(irt_test_acc, irt_valid_acc, knn_valid_acc, knn_test_acc)
+    # print(irt_test_acc, irt_valid_acc, knn_valid_acc, knn_test_acc)
     models, zero_train_matrix, neural_valid_acc, neural_test_acc = train_neural_network()
     es_valid_acc = (knn_valid_acc+irt_valid_acc+neural_valid_acc)/3
     es_test_acc = (knn_test_acc+irt_test_acc+neural_test_acc)/3
     print("Ensemble Validation Accuracy:", es_valid_acc, "Ensemble Test Accuracy:", es_test_acc)
+    print("Predict:")
     predict_ensemble(1, 1046, knn_predicted_probabilities, irt_theta, irt_beta, models, zero_train_matrix)
     # train_neural_network()
     

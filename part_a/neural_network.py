@@ -103,7 +103,7 @@ def sigmoid(x):
     return 1 / (1 + torch.exp(-1 * x))
 
 
-def train(model, lr, lamb, train_data, zero_train_data, valid_data, num_epoch):
+def train(model, lr, lamb, train_data, zero_train_data, valid_data, num_epoch, plot=True):
     """ Train the neural network, where the objective also includes
     a regularizer.
 
@@ -168,14 +168,17 @@ def train(model, lr, lamb, train_data, zero_train_data, valid_data, num_epoch):
                                                                             train_loss=train_loss,
                                                                             valid_loss=loss_valid, acc=valid_acc))
     epochs = np.arange(0, num_epoch, 1)
-    plt.plot(epochs, np.array(valid_cost_list) / N_valid, label="Average Validation Loss")
-    plt.plot(epochs, np.array(train_cost_list) / N_train, label="Average Training Loss")
-    plt.xlabel("Number of Epochs")
-    plt.ylabel("Average Training and Validation loss")
-    plt.legend()
-    plt.show()
-    plot(epochs, valid_acc_list, "Validation accuracy", "Validation accuracy vs Number of epochs")
-    plot(epochs, train_cost_list, "Training loss", "Training loss vs Number of epochs")
+    if(plot==True):
+        plt.plot(epochs, np.array(valid_cost_list) / N_valid, label="Average Validation Loss")
+        plt.plot(epochs, np.array(train_cost_list) / N_train, label="Average Training Loss")
+        plt.xlabel("Number of Epochs")
+        plt.ylabel("Average Training and Validation loss")
+        plt.legend()
+        plt.show()
+        plot(epochs, valid_acc_list, "Validation accuracy", "Validation accuracy vs Number of epochs")
+        plot(epochs, train_cost_list, "Training loss", "Training loss vs Number of epochs")
+    
+    
     return valid_acc_list[-1]  # returns final validation accuracy
     #####################################################################
     #                       END OF YOUR CODE                            #
