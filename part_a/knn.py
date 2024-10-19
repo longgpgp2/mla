@@ -142,13 +142,14 @@ def main():
     print("Test accuracy for item-based KNN with k={}: {}".format(best_k_item, test_acc_item))
     
     # Create the plot
-    plt.plot(k_values, user_based_accuracies, label='User-based KNN')
-    plt.plot(k_values, item_based_accuracies, label='Item-based KNN')
+    plt.scatter(k_values, user_based_accuracies, label='User-based KNN', marker='o')  
+    plt.scatter(k_values, item_based_accuracies, label='Item-based KNN', marker='o')
 
-   # Add labels and title
+
+    # Add labels and title
     plt.xlabel('k')
-    plt.ylabel('Accuracy')
-    plt.title('Accuracy vs. k for KNN')
+    plt.ylabel('Validation Accuracy')
+    plt.title('Validation Accuracy and k')
 
     # Add legend
     plt.legend()
